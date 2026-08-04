@@ -10,7 +10,8 @@
     "db:seed": "ts-node src/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.16.1"
+    "@prisma/client": "^5.16.1",
+    "@prisma/adapter-d1": "^5.16.1"
   },
   "devDependencies": {
     "prisma": "^5.16.1",

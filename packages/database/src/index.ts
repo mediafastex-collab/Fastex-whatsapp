@@ -5,11 +5,27 @@ declare global {
   var prismaGlobal: PrismaClient | undefined;
 }
 
-export const prisma =
-  global.prismaGlobal ||
-  new PrismaClient({
+function createPrismaClient(): PrismaClient {
+  const d1Binding =
+    (typeof process !== "undefined" && (process.env as any)?.DB) ||
+    (typeof globalThis !== "undefined" && (globalThis as any).DB);
+
+  if (d1Binding) {
+    try {
+      const { PrismaD1 } = require("@prisma/adapter-d1");
+      const adapter = new PrismaD1(d1Binding);
+      return new PrismaClient({ adapter } as any);
+    } catch (e) {
+      console.warn("D1 binding detected but @prisma/adapter-d1 load failed. Falling back to default SQLite.", e);
+    }
+  }
+
+  return new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
+}
+
+export const prisma = global.prismaGlobal || createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   global.prismaGlobal = prisma;

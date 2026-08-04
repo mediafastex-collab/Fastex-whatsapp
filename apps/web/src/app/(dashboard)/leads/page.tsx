@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { getMonsoonEditMessage } from "@fastex/shared";
 
 export default function LeadsListPage() {
+
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -128,12 +130,33 @@ export default function LeadsListPage() {
                       )}
                     </td>
                     <td>{new Date(lead.createdAt).toLocaleDateString("en-IN")}</td>
-                    <td>
+                    <td style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        style={{ padding: "6px 12px", fontSize: "12px", background: "#10b981", borderColor: "#059669" }}
+                        onClick={async () => {
+                          const flyerUrl = window.location.origin + "/monsoon-edit-flyer.jpg";
+                          const text = getMonsoonEditMessage(lead.customerName, flyerUrl);
+                          const waUrl = `https://wa.me/${lead.normalizedNumber.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+                          window.open(waUrl, "_blank");
+                          try {
+                            await fetch(`/api/leads/${lead.id}`, {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ markContacted: true, messageContent: text }),
+                            });
+                            fetchLeads(search);
+                          } catch (e) {}
+                        }}
+                      >
+                        💬 WA Chat & Mark Sent
+                      </button>
                       <Link
                         href={`/leads/${lead.id}`}
-                        style={{ color: "var(--accent-cyan)", fontWeight: 600 }}
+                        style={{ color: "var(--accent-cyan)", fontWeight: 600, fontSize: "13px" }}
                       >
-                        View & Message →
+                        Details →
                       </Link>
                     </td>
                   </tr>

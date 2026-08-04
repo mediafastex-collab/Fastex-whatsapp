@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { getMonsoonEditMessage } from "@fastex/shared";
 
 export default function LeadDetailPage() {
+
   const params = useParams();
   const leadId = params.id as string;
 
@@ -76,6 +78,31 @@ export default function LeadDetailPage() {
     }
   };
 
+  const handleMonsoonEditWhatsApp = async () => {
+    if (!lead?.normalizedNumber) return;
+    const flyerUrl = window.location.origin + "/monsoon-edit-flyer.jpg";
+    const text = getMonsoonEditMessage(lead.customerName, flyerUrl);
+    const waUrl = `https://wa.me/${lead.normalizedNumber.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+
+    window.open(waUrl, "_blank");
+
+    try {
+      await fetch(`/api/leads/${leadId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          markContacted: true,
+          messageContent: text,
+        }),
+      });
+      setMessage("✨ WhatsApp Click-to-Chat opened with Monsoon Edit 2026 message & Lead recorded as CONTACTED!");
+      await fetchLead();
+    } catch (err: any) {
+      setMessage(`Error recording status: ${err.message}`);
+    }
+  };
+
+
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "64px", color: "var(--text-secondary)" }}>
@@ -118,16 +145,27 @@ export default function LeadDetailPage() {
             <span>{copied ? "Number Copied!" : "Copy Number"}</span>
           </button>
 
-          {/* 2. Open conversation in WhatsApp (wa.me) */}
+          {/* 2. Monsoon Edit 2026 Click-to-Chat & Mark Sent */}
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ background: "#10b981", borderColor: "#059669" }}
+            onClick={handleMonsoonEditWhatsApp}
+          >
+            <span>💬</span>
+            <span>Monsoon Edit WhatsApp & Mark Sent</span>
+          </button>
+
+          {/* 2b. View/Download Flyer */}
           <a
-            href={`https://wa.me/${lead.normalizedNumber.replace(/\D/g, "")}`}
+            href="/monsoon-edit-flyer.jpg"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-secondary"
-            style={{ borderColor: "var(--accent-green)", color: "#fff" }}
+            style={{ borderColor: "var(--accent-cyan)", color: "var(--accent-cyan)" }}
           >
-            <span>💬</span>
-            <span>Open in WhatsApp</span>
+            <span>📄</span>
+            <span>View Flyer</span>
           </a>
 
           {/* 3. Send welcome message */}

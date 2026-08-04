@@ -137,9 +137,23 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       },
     });
 
+    if (body.markContacted) {
+      await prisma.whatsAppMessage.create({
+        data: {
+          leadId: lead.id,
+          recipientNumber: lead.normalizedNumber,
+          messageContent: body.messageContent || "Dhanera Business Group - Monsoon Edit 2026 message sent via WhatsApp Click-to-Chat",
+          status: "SENT",
+          messageType: "CLICK_TO_CHAT",
+          sentAt: new Date(),
+        },
+      });
+    }
+
     return NextResponse.json({ success: true, lead: updated });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
 

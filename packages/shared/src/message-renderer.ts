@@ -55,3 +55,36 @@ export function getSamplePlaceholders(): MessagePlaceholders {
     follow_up_date: nextWeek,
   };
 }
+
+/**
+ * Returns the Dhanera Business Group - Monsoon Edit 2026 WhatsApp template.
+ */
+export function getMonsoonEditMessage(customerName?: string, flyerUrl?: string): string {
+  const nameGreeting = customerName ? `Hi *${customerName}*,\n\n` : "";
+  const flyerSection = flyerUrl ? `\n\n📄 *Our Exhibition Flyer & Details:*\n${flyerUrl}` : "";
+
+  return `${nameGreeting}*🙏 Thank You for Visiting Fastex Media!*
+
+Thank you for visiting *Fastex Media* at *Stall No. 68* during the *Dhanera Business Group – Monsoon Edit 2026*. It was a pleasure connecting with you and learning more about your business. 🤝
+
+I'm *Aagam Shah*, Founder of *Fastex Media*. We help businesses generate quality leads, build a stronger online presence, and achieve measurable growth through result-driven digital marketing. 🚀
+
+*Our Services:*
+• 📱 Facebook & Instagram Ads
+• 📲 Social Media Management
+• 🎥 Video Ad Creation & UGC Videos
+• 💬 WhatsApp Marketing
+• 💼 LinkedIn Lead Generation
+• 📧 Email Marketing
+
+*Interested in growing your business?*
+
+Simply *reply to this message* if you're looking for any of the above services, and I'd be happy to discuss how we can help your business grow.
+
+Looking forward to working with you! 😊
+
+*Aagam Shah*
+Founder | *Fastex Media*
+📞 *93286 80929 | 99131 66462*${flyerSection}`;
+}
+

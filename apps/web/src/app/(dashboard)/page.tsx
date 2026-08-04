@@ -117,7 +117,7 @@ export default async function DashboardHomePage() {
                   </td>
                 </tr>
               ) : (
-                recentLeads.map((lead) => {
+                recentLeads.map((lead: any) => {
                   const lastMsg = lead.messages[0];
                   return (
                     <tr key={lead.id}>

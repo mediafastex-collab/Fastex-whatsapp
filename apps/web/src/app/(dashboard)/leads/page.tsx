@@ -47,7 +47,7 @@ export default function LeadsListPage() {
       "Created Date",
       "Note",
     ];
-    const rows = leads.map((l) => [
+    const rows = leads.map((l: any) => [
       `"${l.customerName || ""}"`,
       `"${l.normalizedNumber || ""}"`,
       `"${l.businessName || ""}"`,
@@ -59,7 +59,7 @@ export default function LeadsListPage() {
     ]);
     const csvContent =
       "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+      [headers.join(","), ...rows.map((e: any) => e.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -161,7 +161,7 @@ export default function LeadsListPage() {
                 </td>
               </tr>
             ) : (
-              leads.map((lead) => {
+              leads.map((lead: any) => {
                 return (
                   <tr key={lead.id}>
                     <td style={{ fontWeight: 600 }}>{lead.customerName}</td>

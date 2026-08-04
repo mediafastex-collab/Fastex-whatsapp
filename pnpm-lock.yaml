@@ -8,6 +8,12 @@ importers:
 
   .:
     devDependencies:
+      '@cloudflare/next-on-pages':
+        specifier: ^1.13.16
+        version: 1.13.16(@cloudflare/workers-types@4.20240614.0)(next@14.2.35(@babel/core@7.29.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(vercel@39.4.2)(wrangler@4.118.0(@cloudflare/workers-types@4.20240614.0))
+      '@cloudflare/workers-types':
+        specifier: ^4.20240218.0
+        version: 4.20240614.0
       '@types/jest':
         specifier: ^29.5.12
         version: 29.5.14
@@ -26,6 +32,9 @@ importers:
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
+      vercel:
+        specifier: ^39.0.0
+        version: 39.4.2
 
   apps/web:
     dependencies:
@@ -56,7 +65,10 @@ importers:
     devDependencies:
       '@cloudflare/next-on-pages':
         specifier: ^1.13.16
-        version: 1.13.16(next@14.2.35(@babel/core@7.29.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(vercel@39.4.2)(wrangler@4.118.0)
+        version: 1.13.16(@cloudflare/workers-types@4.20240614.0)(next@14.2.35(@babel/core@7.29.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(vercel@39.4.2)(wrangler@4.118.0(@cloudflare/workers-types@4.20240614.0))
+      '@cloudflare/workers-types':
+        specifier: ^4.20240218.0
+        version: 4.20240614.0
       '@types/node':
         specifier: ^20.14.9
         version: 20.19.43
@@ -4126,7 +4138,7 @@ snapshots:
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
-  '@cloudflare/next-on-pages@1.13.16(next@14.2.35(@babel/core@7.29.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(vercel@39.4.2)(wrangler@4.118.0)':
+  '@cloudflare/next-on-pages@1.13.16(@cloudflare/workers-types@4.20240614.0)(next@14.2.35(@babel/core@7.29.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(vercel@39.4.2)(wrangler@4.118.0(@cloudflare/workers-types@4.20240614.0))':
     dependencies:
       acorn: 8.18.0
       ast-types: 0.14.2
@@ -4142,7 +4154,9 @@ snapshots:
       pcre-to-regexp: 1.1.0
       semver: 7.8.5
       vercel: 39.4.2
-      wrangler: 4.118.0
+      wrangler: 4.118.0(@cloudflare/workers-types@4.20240614.0)
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20240614.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -7873,7 +7887,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20260730.1
       '@cloudflare/workerd-windows-64': 1.20260730.1
 
-  wrangler@4.118.0:
+  wrangler@4.118.0(@cloudflare/workers-types@4.20240614.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
       '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260730.1)
@@ -7884,6 +7898,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20260730.1
     optionalDependencies:
+      '@cloudflare/workers-types': 4.20240614.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil

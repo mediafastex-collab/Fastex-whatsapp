@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
         salespersonId: user.id,
         businessName: businessName || null,
         businessCategory: businessCategory || null,
+        leadStatus: body.leadStatus || "HOT LEAD",
         note: note || null,
         followUpDate: followUpDate ? new Date(followUpDate) : null,
       },
@@ -89,52 +90,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 2. Check settings & consent requirement for automatic welcome message
-    const settings = await prisma.whatsAppSettings.findFirst();
-    const canSendAutoMsg =
-      settings?.activeStatus !== false &&
-      normalized.isValid &&
-      (!settings?.consentRequired || lead.consentProvided);
-
-    let messageQueueResult = null;
-
-    if (canSendAutoMsg) {
-      const renderedContent = renderWhatsAppMessage(
-        settings?.defaultMessage ||
-          "Hello {{customer_name}}, thank you for visiting {{business_name}}. It was great meeting you. {{salesperson_name}} will contact you shortly.",
-        {
-          customer_name: lead.customerName,
-          customer_mobile: lead.normalizedNumber,
-          business_name: lead.businessName || settings?.businessName || "Fastex Collaborations",
-          business_category: lead.businessCategory || "",
-          salesperson_name: lead.salesperson.name,
-          note: lead.note || "",
-          date: new Date().toLocaleDateString("en-IN"),
-        }
-      );
-
-      try {
-        messageQueueResult = await callWorkerApi("/queue-message", {
-          method: "POST",
-          body: {
-            leadId: lead.id,
-            recipientNumber: lead.normalizedNumber,
-            messageContent: renderedContent,
-            messageType: "AUTOMATIC_WELCOME",
-            idempotencyKey: `lead_${lead.id}_welcome`,
-          },
-        });
-      } catch (queueErr: any) {
-        console.warn("Could not enqueue automatic welcome message:", queueErr.message);
-        // We still return success for Lead creation as required
-      }
-    }
-
     return NextResponse.json({
       success: true,
       lead,
-      messageQueued: !!messageQueueResult?.success,
-      messageDetails: messageQueueResult || null,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

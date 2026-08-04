@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { getMonsoonEditMessage } from "@fastex/shared";
+import { getMonsoonEditMessage, getWhatsAppClickToChatUrl } from "@fastex/shared";
 
 export default function LeadsListPage() {
 
@@ -34,6 +34,60 @@ export default function LeadsListPage() {
     fetchLeads(search);
   };
 
+  const handleExportCSV = () => {
+
+    if (leads.length === 0) return;
+    const headers = [
+      "Customer Name",
+      "Mobile Number",
+      "Company",
+      "Category",
+      "Lead Status",
+      "Salesperson",
+      "Created Date",
+      "Note",
+    ];
+    const rows = leads.map((l) => [
+      `"${l.customerName || ""}"`,
+      `"${l.normalizedNumber || ""}"`,
+      `"${l.businessName || ""}"`,
+      `"${l.businessCategory || ""}"`,
+      `"${l.leadStatus || "HOT LEAD"}"`,
+      `"${l.salesperson?.name || ""}"`,
+      `"${new Date(l.createdAt).toLocaleDateString("en-IN")}"`,
+      `"${(l.note || "").replace(/"/g, '""')}"`,
+    ]);
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `fastex_leads_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleStatusChange = async (leadId: string, newStatus: string) => {
+    try {
+      await fetch(`/api/leads/${leadId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadStatus: newStatus }),
+      });
+      fetchLeads(search);
+    } catch (e) {}
+  };
+
+  const handleDeleteLead = async (leadId: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete lead "${name}"? This cannot be undone.`)) return;
+    try {
+      await fetch(`/api/leads/${leadId}`, { method: "DELETE" });
+      fetchLeads(search);
+    } catch (e) {}
+  };
+
   return (
     <div>
       <div style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -44,10 +98,21 @@ export default function LeadsListPage() {
           </p>
         </div>
 
-        <Link href="/leads/new" className="btn btn-primary">
-          <span>➕</span>
-          <span>Add New Lead</span>
-        </Link>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={handleExportCSV}
+            style={{ borderColor: "var(--accent-green)", color: "var(--accent-green)" }}
+          >
+            <span>📥</span>
+            <span>Export to CSV</span>
+          </button>
+          <Link href="/leads/new" className="btn btn-primary">
+            <span>➕</span>
+            <span>Add New Lead</span>
+          </Link>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -66,6 +131,7 @@ export default function LeadsListPage() {
         </form>
       </div>
 
+
       {/* Leads Table */}
       <div className="table-container">
         <table className="table">
@@ -74,10 +140,9 @@ export default function LeadsListPage() {
               <th>Customer Name</th>
               <th>Mobile Number</th>
               <th>Company</th>
+              <th>Category</th>
+              <th>Lead Status</th>
               <th>Salesperson</th>
-              <th>Consent</th>
-              <th>WhatsApp Reg.</th>
-              <th>Latest Message</th>
               <th>Submitted Date</th>
               <th>Action</th>
             </tr>
@@ -85,50 +150,46 @@ export default function LeadsListPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={9} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
+                <td colSpan={8} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
                   Loading leads...
                 </td>
               </tr>
             ) : leads.length === 0 ? (
               <tr>
-                <td colSpan={9} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
+                <td colSpan={8} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
                   No customer leads found.
                 </td>
               </tr>
             ) : (
               leads.map((lead) => {
-                const latestMsg = lead.messages && lead.messages[0];
                 return (
                   <tr key={lead.id}>
                     <td style={{ fontWeight: 600 }}>{lead.customerName}</td>
                     <td>{lead.normalizedNumber}</td>
                     <td>{lead.businessName || "—"}</td>
+                    <td>{lead.businessCategory || "—"}</td>
+                    <td>
+                      <select
+                        value={lead.leadStatus || "HOT LEAD"}
+                        onChange={(e) => handleStatusChange(lead.id, e.target.value)}
+                        style={{
+                          background: "rgba(255, 255, 255, 0.08)",
+                          color: "#fff",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          borderRadius: "6px",
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                        }}
+                      >
+                        <option value="HOT LEAD">🔥 HOT LEAD</option>
+                        <option value="WARM LEAD">☀️ WARM LEAD</option>
+                        <option value="COLD LEAD">❄️ COLD LEAD</option>
+                        <option value="CONVERTED">🏆 CONVERTED</option>
+                        <option value="NOT INTERESTED">❌ NOT INTERESTED</option>
+                      </select>
+                    </td>
                     <td>{lead.salesperson?.name}</td>
-                    <td>
-                      {lead.consentProvided ? (
-                        <span style={{ color: "var(--accent-green)", fontWeight: 600 }}>✓ Granted</span>
-                      ) : (
-                        <span style={{ color: "var(--accent-red)" }}>No Consent</span>
-                      )}
-                    </td>
-                    <td>
-                      {lead.isRegisteredOnWa === true ? (
-                        <span style={{ color: "var(--accent-green)" }}>Registered</span>
-                      ) : lead.isRegisteredOnWa === false ? (
-                        <span style={{ color: "var(--accent-red)" }}>Unregistered</span>
-                      ) : (
-                        <span style={{ color: "var(--text-muted)" }}>Unchecked</span>
-                      )}
-                    </td>
-                    <td>
-                      {latestMsg ? (
-                        <span className={`status-badge status-${latestMsg.status}`}>
-                          {latestMsg.status}
-                        </span>
-                      ) : (
-                        <span style={{ color: "var(--text-muted)" }}>None</span>
-                      )}
-                    </td>
                     <td>{new Date(lead.createdAt).toLocaleDateString("en-IN")}</td>
                     <td style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                       <button
@@ -138,7 +199,7 @@ export default function LeadsListPage() {
                         onClick={async () => {
                           const flyerUrl = window.location.origin + "/monsoon-edit-flyer.jpg";
                           const text = getMonsoonEditMessage(lead.customerName, flyerUrl);
-                          const waUrl = `https://wa.me/${lead.normalizedNumber.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+                          const waUrl = getWhatsAppClickToChatUrl(lead.normalizedNumber, text);
                           window.open(waUrl, "_blank");
                           try {
                             await fetch(`/api/leads/${lead.id}`, {
@@ -158,6 +219,15 @@ export default function LeadsListPage() {
                       >
                         Details →
                       </Link>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        style={{ padding: "6px 10px", fontSize: "12px" }}
+                        onClick={() => handleDeleteLead(lead.id, lead.customerName)}
+                        title="Delete Lead"
+                      >
+                        🗑️
+                      </button>
                     </td>
                   </tr>
                 );
@@ -169,3 +239,4 @@ export default function LeadsListPage() {
     </div>
   );
 }
+

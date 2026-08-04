@@ -58,24 +58,25 @@ export function getSamplePlaceholders(): MessagePlaceholders {
 
 /**
  * Returns the Dhanera Business Group - Monsoon Edit 2026 WhatsApp template.
+ * Emojis are positioned outside asterisk tags so WhatsApp markdown bolding works reliably across all clients.
  */
 export function getMonsoonEditMessage(customerName?: string, flyerUrl?: string): string {
   const nameGreeting = customerName ? `Hi *${customerName}*,\n\n` : "";
   const flyerSection = flyerUrl ? `\n\n📄 *Our Exhibition Flyer & Details:*\n${flyerUrl}` : "";
 
-  return `${nameGreeting}*🙏 Thank You for Visiting Fastex Media!*
+  return `${nameGreeting}🙏 *Thank You for Visiting Fastex Media!*
 
-Thank you for visiting *Fastex Media* at *Stall No. 68* during the *Dhanera Business Group – Monsoon Edit 2026*. It was a pleasure connecting with you and learning more about your business. 🤝
+Thank you for visiting *Fastex Media* at *Stall No. 68* during the *Dhanera Business Group - Monsoon Edit 2026*. It was a pleasure connecting with you and learning more about your business. 🤝
 
 I'm *Aagam Shah*, Founder of *Fastex Media*. We help businesses generate quality leads, build a stronger online presence, and achieve measurable growth through result-driven digital marketing. 🚀
 
 *Our Services:*
-• 📱 Facebook & Instagram Ads
-• 📲 Social Media Management
-• 🎥 Video Ad Creation & UGC Videos
-• 💬 WhatsApp Marketing
-• 💼 LinkedIn Lead Generation
-• 📧 Email Marketing
+• 📱 *Facebook & Instagram Ads*
+• 📲 *Social Media Management*
+• 🎥 *Video Ad Creation & UGC Videos*
+• 💬 *WhatsApp Marketing*
+• 💼 *LinkedIn Lead Generation*
+• 📧 *Email Marketing*
 
 *Interested in growing your business?*
 
@@ -87,4 +88,17 @@ Looking forward to working with you! 😊
 Founder | *Fastex Media*
 📞 *93286 80929 | 99131 66462*${flyerSection}`;
 }
+
+/**
+ * Generates a universal WhatsApp Click-to-Chat URL (api.whatsapp.com/send)
+ * which preserves emojis, newlines (CRLF), and bold formatting across mobile, desktop, and web clients.
+ */
+export function getWhatsAppClickToChatUrl(mobile: string, text: string): string {
+  if (!mobile) return "";
+  const cleanMobile = mobile.replace(/\D/g, "");
+  // Normalize newlines to \r\n (%0D%0A) which WhatsApp requires for multi-line formatting
+  const normalizedText = text.replace(/\r?\n/g, "\r\n");
+  return `https://api.whatsapp.com/send?phone=${cleanMobile}&text=${encodeURIComponent(normalizedText)}`;
+}
+
 

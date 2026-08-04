@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getMonsoonEditMessage } from "@fastex/shared";
+import { getMonsoonEditMessage, getWhatsAppClickToChatUrl } from "@fastex/shared";
 
 export default function LeadDetailPage() {
 
@@ -82,7 +82,7 @@ export default function LeadDetailPage() {
     if (!lead?.normalizedNumber) return;
     const flyerUrl = window.location.origin + "/monsoon-edit-flyer.jpg";
     const text = getMonsoonEditMessage(lead.customerName, flyerUrl);
-    const waUrl = `https://wa.me/${lead.normalizedNumber.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+    const waUrl = getWhatsAppClickToChatUrl(lead.normalizedNumber, text);
 
     window.open(waUrl, "_blank");
 
@@ -138,7 +138,7 @@ export default function LeadDetailPage() {
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
           {/* 1. Copy WhatsApp number */}
           <button type="button" className="btn btn-secondary" onClick={copyNumber}>
             <span>📋</span>
@@ -168,39 +168,40 @@ export default function LeadDetailPage() {
             <span>View Flyer</span>
           </a>
 
-          {/* 3. Send welcome message */}
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => handleAction("send-welcome")}
-            disabled={actionLoading}
-          >
-            <span>✨</span>
-            <span>Send Welcome Message</span>
-          </button>
-
-          {/* 4. Resend a failed message (with confirmation) */}
-          {hasFailedMsg && (
-            <button
-              type="button"
-              className="btn btn-danger"
-              onClick={() => setShowConfirmResend(true)}
-              disabled={actionLoading}
-            >
-              <span>🔄</span>
-              <span>Resend Failed Message</span>
-            </button>
-          )}
-
-          {/* 5. Send manually written message */}
-          <button
-            type="button"
+          {/* 3. Lead Priority Dropdown */}
+          <select
+            value={lead.leadStatus || "HOT LEAD"}
+            onChange={async (e) => {
+              const newStatus = e.target.value;
+              await fetch(`/api/leads/${leadId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ leadStatus: newStatus }),
+              });
+              fetchLead();
+            }}
             className="btn btn-secondary"
-            onClick={() => setShowCustomModal(true)}
-            disabled={actionLoading}
+            style={{ background: "rgba(255, 255, 255, 0.08)", color: "#fff", fontWeight: 600 }}
           >
-            <span>✍️</span>
-            <span>Send Custom Message</span>
+            <option value="HOT LEAD">🔥 HOT LEAD</option>
+            <option value="WARM LEAD">☀️ WARM LEAD</option>
+            <option value="COLD LEAD">❄️ COLD LEAD</option>
+            <option value="CONVERTED">🏆 CONVERTED</option>
+            <option value="NOT INTERESTED">❌ NOT INTERESTED</option>
+          </select>
+
+          {/* 4. Delete Lead Button */}
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={async () => {
+              if (!confirm(`Are you sure you want to delete lead "${lead.customerName}"?`)) return;
+              await fetch(`/api/leads/${leadId}`, { method: "DELETE" });
+              window.location.href = "/leads";
+            }}
+          >
+            <span>🗑️</span>
+            <span>Delete Lead</span>
           </button>
         </div>
       </div>
@@ -224,7 +225,7 @@ export default function LeadDetailPage() {
       <div className="grid-2">
         {/* Lead Info Box */}
         <div className="glass-card">
-          <h2 style={{ fontSize: "18px", marginBottom: "20px" }}>Lead Information & Consent</h2>
+          <h2 style={{ fontSize: "18px", marginBottom: "20px" }}>Lead Information & Status</h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -238,43 +239,26 @@ export default function LeadDetailPage() {
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>WhatsApp Registration Status</span>
-              <span>
-                {lead.isRegisteredOnWa === true ? (
-                  <span style={{ color: "var(--accent-green)", fontWeight: 600 }}>✓ Registered</span>
-                ) : lead.isRegisteredOnWa === false ? (
-                  <span style={{ color: "var(--accent-red)" }}>✗ Unregistered</span>
-                ) : (
-                  <span style={{ color: "var(--text-muted)" }}>Not verified yet</span>
-                )}
+              <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Lead Status / Priority</span>
+              <span
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  background: "rgba(16, 185, 129, 0.15)",
+                  color: "#34d399",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                }}
+              >
+                {lead.leadStatus || "HOT LEAD"}
               </span>
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Consent Status</span>
-              <span>
-                {lead.consentProvided ? (
-                  <span style={{ color: "var(--accent-green)", fontWeight: 600 }}>✓ Granted</span>
-                ) : (
-                  <span style={{ color: "var(--accent-red)" }}>Not Provided</span>
-                )}
-              </span>
+              <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Submitted Date</span>
+              <span>{new Date(lead.createdAt).toLocaleString("en-IN")}</span>
             </div>
 
-            {lead.consentProvided && (
-              <div
-                style={{
-                  padding: "12px",
-                  background: "rgba(16, 185, 129, 0.08)",
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                  color: "var(--text-secondary)",
-                }}
-              >
-                <div><strong>Consent Timestamp:</strong> {new Date(lead.consentTimestamp || lead.createdAt).toLocaleString("en-IN")}</div>
-                <div style={{ marginTop: "4px" }}><strong>Text:</strong> “{lead.consentText}”</div>
-              </div>
-            )}
 
             {lead.note && (
               <div style={{ paddingTop: "12px", borderTop: "1px solid var(--border-color)" }}>

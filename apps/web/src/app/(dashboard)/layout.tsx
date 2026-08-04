@@ -44,35 +44,6 @@ export default async function DashboardLayout({
             <span>👥</span>
             <span>Leads & Contacts</span>
           </Link>
-
-          <Link href="/whatsapp/logs" className="nav-item">
-            <span>📜</span>
-            <span>Message Logs</span>
-          </Link>
-
-          {isAdmin && (
-            <>
-              <div
-                style={{
-                  fontSize: "11px",
-                  color: "var(--text-muted)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  margin: "16px 12px 6px 12px",
-                }}
-              >
-                Administrator
-              </div>
-              <Link href="/whatsapp/connection" className="nav-item">
-                <span>🔗</span>
-                <span>WhatsApp Connection</span>
-              </Link>
-              <Link href="/whatsapp/settings" className="nav-item">
-                <span>⚙️</span>
-                <span>Message Settings</span>
-              </Link>
-            </>
-          )}
         </nav>
 
         <div className="sidebar-footer">

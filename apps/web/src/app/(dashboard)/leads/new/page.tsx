@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { normalizeMobileNumber } from "@fastex/shared";
+import { normalizeMobileNumber, getMonsoonEditMessage, getWhatsAppClickToChatUrl } from "@fastex/shared";
 
 export default function NewLeadPage() {
   const router = useRouter();
@@ -11,10 +11,12 @@ export default function NewLeadPage() {
     originalNumber: "+91 ",
     businessName: "",
     businessCategory: "",
+    leadStatus: "HOT LEAD",
     note: "",
     followUpDate: "",
-    consentProvided: false,
+    consentProvided: true,
   });
+
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,11 +39,18 @@ export default function NewLeadPage() {
     setNormalizedPreview(norm);
   };
 
+  const [waUrlState, setWaUrlState] = useState("");
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setSuccessMsg("");
+    setWaUrlState("");
+
+    // Open a blank tab synchronously in response to the form submit click so browsers don't block it as a popup!
+    const newTab = window.open("about:blank", "_blank");
 
     try {
       const res = await fetch("/api/leads", {
@@ -52,25 +61,52 @@ export default function NewLeadPage() {
 
       const data = await res.json();
       if (!res.ok) {
+        if (newTab) newTab.close();
         throw new Error(data.error || "Failed to submit lead");
       }
 
-      setSuccessMsg(
-        `Lead "${data.lead.customerName}" saved successfully!` +
-          (data.messageQueued
-            ? " Automatic welcome WhatsApp message has been queued."
-            : " (No automatic message sent: consent or settings check)")
-      );
+      // Generate WhatsApp Click-to-Chat URL with proper CRLF line breaks and emoji support
+      const flyerUrl = window.location.origin + "/monsoon-edit-flyer.jpg";
+      const text = getMonsoonEditMessage(data.lead.customerName, flyerUrl);
+      const waUrl = getWhatsAppClickToChatUrl(data.lead.normalizedNumber, text);
+      setWaUrlState(waUrl);
+
+      // Navigate the opened tab to WhatsApp
+      if (newTab) {
+        newTab.location.href = waUrl;
+      } else {
+        // Fallback programmatic link click
+        const link = document.createElement("a");
+        link.href = waUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // Mark as contacted in background
+      try {
+        await fetch(`/api/leads/${data.lead.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ markContacted: true, messageContent: text }),
+        });
+      } catch (e) {}
+
+      setSuccessMsg(`Lead "${data.lead.customerName}" saved & WhatsApp Click-to-Chat opened!`);
 
       setTimeout(() => {
-        router.push(`/leads/${data.lead.id}`);
-      }, 1500);
+        router.push("/leads");
+      }, 2500);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
+
 
   return (
     <div>
@@ -110,7 +146,26 @@ export default function NewLeadPage() {
             fontWeight: 600,
           }}
         >
-          ✓ {successMsg}
+          <div style={{ marginBottom: waUrlState ? "12px" : "0" }}>✓ {successMsg}</div>
+          {waUrlState && (
+            <a
+              href={waUrlState}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              style={{
+                display: "inline-block",
+                padding: "10px 20px",
+                background: "#10b981",
+                borderColor: "#059669",
+                color: "#fff",
+                textDecoration: "none",
+                fontSize: "14px",
+              }}
+            >
+              💬 Click Here to Open WhatsApp (If popup was blocked)
+            </a>
+          )}
         </div>
       )}
 
@@ -196,55 +251,35 @@ export default function NewLeadPage() {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Next Follow-up Date</label>
-            <input
-              type="date"
-              className="form-input"
-              value={form.followUpDate}
-              onChange={(e) => setForm({ ...form, followUpDate: e.target.value })}
-            />
-          </div>
-
-          {/* Consent Checkbox */}
-          <div
-            style={{
-              padding: "18px 20px",
-              background: "rgba(16, 185, 129, 0.08)",
-              border: "1px solid rgba(16, 185, 129, 0.25)",
-              borderRadius: "12px",
-              marginBottom: "28px",
-            }}
-          >
-            <label
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "12px",
-                cursor: "pointer",
-              }}
-            >
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">Next Follow-up Date</label>
               <input
-                type="checkbox"
-                checked={form.consentProvided}
-                onChange={(e) => setForm({ ...form, consentProvided: e.target.checked })}
-                style={{ width: "20px", height: "20px", marginTop: "2px", accentColor: "var(--accent-green)" }}
+                type="date"
+                className="form-input"
+                value={form.followUpDate}
+                onChange={(e) => setForm({ ...form, followUpDate: e.target.value })}
               />
-              <div>
-                <strong style={{ display: "block", color: "#fff", fontSize: "14px" }}>
-                  Customer WhatsApp Messaging Consent
-                </strong>
-                <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-                  “I agree to receive information and follow-up messages from this business through WhatsApp.”
-                </span>
-                <span style={{ display: "block", fontSize: "11px", color: "var(--accent-yellow)", marginTop: "4px" }}>
-                  Note: Automatic welcome messages will not be sent if consent is not granted.
-                </span>
-              </div>
-            </label>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Lead Status / Priority</label>
+              <select
+                className="form-input"
+                value={form.leadStatus}
+                onChange={(e) => setForm({ ...form, leadStatus: e.target.value })}
+                style={{ background: "rgba(255, 255, 255, 0.05)", color: "#fff" }}
+              >
+                <option value="HOT LEAD">🔥 HOT LEAD</option>
+                <option value="WARM LEAD">☀️ WARM LEAD</option>
+                <option value="COLD LEAD">❄️ COLD LEAD</option>
+                <option value="CONVERTED">🏆 CONVERTED</option>
+                <option value="NOT INTERESTED">❌ NOT INTERESTED</option>
+              </select>
+            </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -255,10 +290,10 @@ export default function NewLeadPage() {
             <button
               type="submit"
               className="btn btn-primary"
-              style={{ padding: "14px 32px", fontSize: "15px" }}
+              style={{ padding: "14px 32px", fontSize: "15px", background: "#10b981", borderColor: "#059669" }}
               disabled={loading}
             >
-              {loading ? "Saving & Enqueuing..." : "Submit & Send Welcome WhatsApp"}
+              {loading ? "Saving & Opening WhatsApp..." : "💬 Submit & Open Monsoon Edit WhatsApp"}
             </button>
           </div>
         </form>
@@ -266,3 +301,4 @@ export default function NewLeadPage() {
     </div>
   );
 }
+

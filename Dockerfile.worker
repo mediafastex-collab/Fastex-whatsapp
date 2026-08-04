@@ -1,0 +1,51 @@
+FROM node:20-bookworm-slim AS base
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Install Chromium and required fonts for Puppeteer / whatsapp-web.js
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    fonts-ipafont-gothic \
+    fonts-wqy-zenhei \
+    fonts-thai-tlwg \
+    fonts-kacst \
+    fonts-freefont-ttf \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
+# Install pnpm
+RUN npm install -g pnpm@9.4.0
+
+FROM base AS builder
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/worker ./apps/worker
+
+RUN pnpm install --frozen-lockfile=false
+RUN pnpm --filter @fastex/database run db:generate
+RUN pnpm --filter @fastex/shared run build
+RUN pnpm --filter @fastex/database run build
+RUN pnpm --filter @fastex/worker run build
+
+FROM base AS runner
+WORKDIR /app
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/worker ./apps/worker
+
+# Create LocalAuth directory and enforce strict 0700 permissions
+RUN mkdir -p /app/.wwebjs_auth && chmod -R 700 /app/.wwebjs_auth
+
+EXPOSE 4000
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:4000/health || exit 1
+
+CMD ["node", "apps/worker/dist/index.js"]

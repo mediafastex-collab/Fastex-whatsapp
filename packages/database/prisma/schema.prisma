@@ -1,0 +1,101 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Enums mapped as String for SQLite compatibility
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  name           String
+  passwordHash   String
+  role           String          @default("SALESPERSON")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  leads          Lead[]
+}
+
+model Lead {
+  id                 String            @id @default(uuid())
+  customerName       String
+  originalNumber     String
+  countryCode        String            @default("+91")
+  normalizedNumber   String
+  recipientId        String
+  isValidNumber      Boolean           @default(true)
+  isRegisteredOnWa   Boolean?
+  consentProvided    Boolean           @default(false)
+  consentTimestamp   DateTime?
+  consentText        String?
+  consentLocation    String?
+  salespersonId      String
+  salesperson        User              @relation(fields: [salespersonId], references: [id])
+  businessName       String?
+  businessCategory   String?
+  note               String?
+  followUpDate       DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  messages           WhatsAppMessage[]
+}
+
+model WhatsAppSession {
+  id                 String           @id @default(uuid())
+  sessionName        String           @unique @default("main-business-whatsapp")
+  phoneNumber        String?
+  profileName        String?
+  connectionStatus   String           @default("NOT_CONNECTED")
+  lastConnectedAt    DateTime?
+  lastDisconnectedAt DateTime?
+  lastQrGeneratedAt  DateTime?
+  lastSuccessfulMsgAt DateTime?
+  authStatus         String           @default("UNAUTHENTICATED")
+  workerInstanceId   String?
+  lastError          String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+}
+
+model WhatsAppMessage {
+  id               String        @id @default(uuid())
+  leadId           String?
+  lead             Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  recipientNumber  String
+  whatsappMessageId String?      @unique
+  messageContent   String
+  messageType      String        @default("AUTOMATIC_WELCOME")
+  status           String        @default("PENDING")
+  attemptCount     Int           @default(0)
+  errorCode        String?
+  errorMessage     String?
+  idempotencyKey   String?       @unique
+  scheduledAt      DateTime      @default(now())
+  queuedAt         DateTime?
+  sentAt           DateTime?
+  acknowledgedAt   DateTime?
+  deliveredAt      DateTime?
+  readAt           DateTime?
+  failedAt         DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model WhatsAppSettings {
+  id               String   @id @default(uuid())
+  activeStatus     Boolean  @default(true)
+  defaultMessage   String   @default("Hello {{customer_name}}, thank you for visiting {{business_name}}. It was great meeting you. {{salesperson_name}} will contact you shortly.")
+  delaySeconds     Int      @default(0)
+  maxPerMinute     Int      @default(10)
+  maxRetryCount    Int      @default(2)
+  minDelayBetweenMs Int     @default(4000)
+  consentRequired  Boolean  @default(true)
+  businessName     String   @default("Fastex Collaborations")
+  fallbackMessage  String   @default("Hello, thank you for connecting with us.")
+  testRecipient    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}

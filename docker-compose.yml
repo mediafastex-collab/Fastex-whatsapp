@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fastex-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: fastex_user
+      POSTGRES_PASSWORD: fastex_password_2026
+      POSTGRES_DB: fastex_whatsapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fastex_user -d fastex_whatsapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: fastex-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: fastex-whatsapp-worker
+    restart: always
+    environment:
+      NODE_ENV: production
+      WORKER_PORT: 4000
+      DATABASE_URL: postgresql://fastex_user:fastex_password_2026@postgres:5432/fastex_whatsapp?schema=public
+      REDIS_URL: redis://redis:6379
+      INTERNAL_API_KEY: fastex_internal_secret_key_2026
+      WHATSAPP_AUTH_DIR: /app/.wwebjs_auth
+    ports:
+      - "4000:4000"
+    volumes:
+      - whatsapp-auth:/app/.wwebjs_auth
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: fastex-whatsapp-web
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://fastex_user:fastex_password_2026@postgres:5432/fastex_whatsapp?schema=public
+      WORKER_URL: http://worker:4000
+      INTERNAL_API_KEY: fastex_internal_secret_key_2026
+      JWT_SECRET: fastex_jwt_secret_key_super_secure_2026
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
+
+volumes:
+  postgres-data:
+  redis-data:
+  whatsapp-auth:
+    driver: local

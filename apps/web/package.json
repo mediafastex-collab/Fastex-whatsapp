@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
+    "pages:build": "next build && npx -y @cloudflare/next-on-pages@1",
+    "cf-build": "next build && npx -y @cloudflare/next-on-pages@1",
     "start": "next start -p 3001"
   },
   "dependencies": {
@@ -18,6 +20,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.2",
     "@types/node": "^20.14.9",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

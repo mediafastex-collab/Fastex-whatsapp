@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "pnpm -r --parallel run dev",
     "build": "pnpm -r run build",
+    "pages:build": "pnpm -r run build && npx -y @cloudflare/next-on-pages@1",
+    "cf-build": "pnpm -r run build && npx -y @cloudflare/next-on-pages@1",
     "test": "jest --runInBand",
     "db:generate": "pnpm --filter @fastex/database run db:generate",
     "db:push": "pnpm --filter @fastex/database run db:push",

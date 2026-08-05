@@ -128,7 +128,7 @@ export default function LeadDetailPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="page-header">
         <div>
           <Link href="/leads" style={{ fontSize: "13px", color: "var(--accent-cyan)", marginBottom: "8px", display: "inline-block" }}>
             ← Back to Leads Table

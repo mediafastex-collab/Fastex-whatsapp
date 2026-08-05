@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@business.com");
-  const [password, setPassword] = useState("Admin@123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,12 +34,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fillTestCredentials = (testEmail: string, testPass: string) => {
-    setEmail(testEmail);
-    setPassword(testPass);
-    setError("");
   };
 
   return (
@@ -128,41 +122,6 @@ export default function LoginPage() {
             {loading ? "Authenticating..." : "Sign In to Portal"}
           </button>
         </form>
-
-        <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid var(--border-color)" }}>
-          <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px", textAlign: "center", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            Quick Test Accounts (Click to Fill)
-          </p>
-          <div style={{ display: "flex", gap: "8px", flexDirection: "column" }}>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              style={{ fontSize: "13px", justifyContent: "space-between" }}
-              onClick={() => fillTestCredentials("admin@business.com", "Admin@123456")}
-            >
-              <span>Administrator</span>
-              <span style={{ opacity: 0.7 }}>admin@business.com</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              style={{ fontSize: "13px", justifyContent: "space-between" }}
-              onClick={() => fillTestCredentials("sales1@business.com", "Sales@123456")}
-            >
-              <span>Salesperson 1</span>
-              <span style={{ opacity: 0.7 }}>sales1@business.com</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              style={{ fontSize: "13px", justifyContent: "space-between" }}
-              onClick={() => fillTestCredentials("sales2@business.com", "Sales@123456")}
-            >
-              <span>Salesperson 2</span>
-              <span style={{ opacity: 0.7 }}>sales2@business.com</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

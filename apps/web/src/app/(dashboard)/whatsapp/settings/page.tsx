@@ -95,7 +95,7 @@ export default function WhatsAppSettingsPage() {
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
+      <div className="page-header">
         <div>
           <h1>WhatsApp Message Settings</h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>

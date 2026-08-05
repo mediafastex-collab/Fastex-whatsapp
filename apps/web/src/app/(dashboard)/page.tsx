@@ -44,7 +44,7 @@ export default async function DashboardHomePage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="page-header">
         <div>
           <h1>Welcome back, {user?.name}</h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>

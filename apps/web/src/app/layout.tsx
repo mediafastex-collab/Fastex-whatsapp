@@ -6,6 +6,13 @@ export const metadata = {
   description: "Enterprise unofficial WhatsApp Web QR-code integration & CRM lead messaging platform.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#0a0f1d",
+};
+
 export default function RootLayout({
   children,
 }: {

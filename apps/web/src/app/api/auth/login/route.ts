@@ -3,16 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
 import { signAuthToken } from "@/lib/auth";
-
-// Web Crypto SHA-256 (Edge-compatible). Produces the same hex digest as the
-// Node "crypto" createHash used by the database seed, so seeded passwords match.
-async function hashPassword(password: string): Promise<string> {
-  const data = new TextEncoder().encode(password + "fastex_salt_2026");
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+import { hashPassword } from "@/lib/password";
 
 export async function POST(req: NextRequest) {
   const prisma = getPrisma();

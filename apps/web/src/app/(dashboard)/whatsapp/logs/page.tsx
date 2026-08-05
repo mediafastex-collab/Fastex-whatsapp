@@ -69,7 +69,7 @@ export default function MessageLogsPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="page-header">
         <div>
           <h1>WhatsApp Message Logs</h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>

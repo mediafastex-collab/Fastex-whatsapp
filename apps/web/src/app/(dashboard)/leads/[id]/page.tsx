@@ -26,10 +26,10 @@ export default function LeadDetailPage() {
     try {
       const res = await fetch(`/api/leads/${leadId}`);
       if (res.ok) {
-        const data = await res.json();
+        const data: any = await res.json();
         setLead(data);
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         setMessage(`Error: ${err.error || "Failed to load lead"}`);
       }
     } catch (e: any) {
@@ -59,7 +59,7 @@ export default function LeadDetailPage() {
         }),
       });
 
-      const data = await res.json();
+      const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || "Action failed");
 
       setMessage(`Success! Message queued for sending (Job ID: ${data.jobId || data.messageId || "ok"}).`);

@@ -1,12 +1,13 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@fastex/database";
+import { getPrisma } from "@/lib/prisma";
 import { normalizeMobileNumber, renderWhatsAppMessage } from "@fastex/shared";
 import { requireUser } from "@/lib/auth";
 import { callWorkerApi } from "@/lib/worker-client";
 
 export async function GET(req: NextRequest) {
+  const prisma = getPrisma();
   try {
     const user = await requireUser();
     const { searchParams } = new URL(req.url);
@@ -45,6 +46,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const prisma = getPrisma();
   try {
     const user = await requireUser();
     const body = await req.json();

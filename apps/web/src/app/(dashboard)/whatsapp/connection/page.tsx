@@ -19,7 +19,7 @@ export default function WhatsAppConnectionPage() {
     try {
       const res = await fetch("/api/whatsapp/status");
       if (res.ok) {
-        const data = await res.json();
+        const data: any = await res.json();
         const merged = {
           ...data.dbSession,
           ...data.workerStatus,
@@ -42,7 +42,7 @@ export default function WhatsAppConnectionPage() {
     setActionMessage("");
     try {
       const res = await fetch("/api/whatsapp/initialize", { method: "POST" });
-      const data = await res.json();
+      const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || "Initialization failed");
       setActionMessage("WhatsApp worker started. Please wait for QR code generation...");
       await fetchStatus();
@@ -58,7 +58,7 @@ export default function WhatsAppConnectionPage() {
     setActionMessage("");
     try {
       const res = await fetch("/api/whatsapp/restart", { method: "POST" });
-      const data = await res.json();
+      const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || "Restart failed");
       setActionMessage("Worker restarted without clearing LocalAuth session.");
       await fetchStatus();
@@ -75,7 +75,7 @@ export default function WhatsAppConnectionPage() {
     setActionMessage("");
     try {
       const res = await fetch("/api/whatsapp/logout", { method: "POST" });
-      const data = await res.json();
+      const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || "Logout failed");
       setActionMessage("WhatsApp account logged out and session destroyed. Fresh QR scan required.");
       await fetchStatus();

@@ -1,10 +1,11 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@fastex/database";
+import { getPrisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 
 export async function GET() {
+  const prisma = getPrisma();
   try {
     await requireAdmin();
     let settings = await prisma.whatsAppSettings.findFirst();
@@ -20,6 +21,7 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  const prisma = getPrisma();
   try {
     await requireAdmin();
     const body = await req.json();

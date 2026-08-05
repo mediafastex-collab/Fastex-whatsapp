@@ -1,12 +1,13 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@fastex/database";
+import { getPrisma } from "@/lib/prisma";
 import { renderWhatsAppMessage } from "@fastex/shared";
 import { requireUser } from "@/lib/auth";
 import { callWorkerApi } from "@/lib/worker-client";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const prisma = getPrisma();
   try {
     const user = await requireUser();
     const leadId = params.id;
@@ -36,6 +37,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  const prisma = getPrisma();
   try {
     const user = await requireUser();
     const leadId = params.id;
@@ -112,6 +114,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const prisma = getPrisma();
   try {
     const user = await requireUser();
     const leadId = params.id;
@@ -160,6 +163,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const prisma = getPrisma();
   try {
     const user = await requireUser();
     const leadId = params.id;

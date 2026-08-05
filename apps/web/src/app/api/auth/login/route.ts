@@ -1,7 +1,7 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@fastex/database";
+import { getPrisma } from "@/lib/prisma";
 import { signAuthToken } from "@/lib/auth";
 
 // Web Crypto SHA-256 (Edge-compatible). Produces the same hex digest as the
@@ -15,6 +15,7 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+  const prisma = getPrisma();
   try {
     const { email, password } = await req.json();
     if (!email || !password) {

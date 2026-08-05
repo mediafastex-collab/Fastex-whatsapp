@@ -6,19 +6,26 @@ declare global {
 }
 
 function resolveD1Binding(): any {
-  // Cloudflare D1 binding may be exposed on globalThis or process.env depending on runtime.
+  // Fallback binding locations (module scope). On Cloudflare Pages the binding
+  // actually lives on the per-request context — see getPrisma() in the web app,
+  // which passes it explicitly to createPrismaClient().
   if (typeof globalThis !== "undefined" && (globalThis as any).DB) return (globalThis as any).DB;
   if (typeof process !== "undefined" && (process.env as any)?.DB) return (process.env as any).DB;
   return null;
 }
 
-function createPrismaClient(): PrismaClient {
-  const d1Binding = resolveD1Binding();
+/**
+ * Builds a PrismaClient. When a Cloudflare D1 binding is provided (or found on
+ * globalThis/process.env), it uses the D1 driver adapter; otherwise it returns
+ * a standard client (local Node/SQLite development).
+ */
+export function createPrismaClient(d1Binding?: any): PrismaClient {
+  const binding = d1Binding || resolveD1Binding();
 
-  if (d1Binding) {
+  if (binding) {
     try {
       const { PrismaD1 } = require("@prisma/adapter-d1");
-      const adapter = new PrismaD1(d1Binding);
+      const adapter = new PrismaD1(binding);
       return new PrismaClient({ adapter } as any);
     } catch (e) {
       console.warn("D1 binding detected but @prisma/adapter-d1 load failed. Falling back to default client.", e);

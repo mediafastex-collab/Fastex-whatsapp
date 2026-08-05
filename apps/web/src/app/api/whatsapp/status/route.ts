@@ -3,9 +3,10 @@ export const runtime = 'edge';
 import { NextResponse } from "next/server";
 import { callWorkerApi } from "@/lib/worker-client";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@fastex/database";
+import { getPrisma } from "@/lib/prisma";
 
 export async function GET() {
+  const prisma = getPrisma();
   try {
     const user = await getCurrentUser();
     if (!user) {

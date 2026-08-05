@@ -2,10 +2,11 @@ export const runtime = 'edge';
 
 import React from "react";
 import Link from "next/link";
-import { prisma } from "@fastex/database";
+import { getPrisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
 export default async function DashboardHomePage() {
+  const prisma = getPrisma();
   const user = await getCurrentUser();
   const isAdmin = user?.role === "ADMIN";
 

@@ -34,7 +34,7 @@ export default function MessageLogsPage() {
 
       const res = await fetch(`/api/logs?${query.toString()}`);
       if (res.ok) {
-        const data = await res.json();
+        const data: any = await res.json();
         setLogs(Array.isArray(data) ? data : []);
       }
     } catch (e) {

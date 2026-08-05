@@ -1,10 +1,11 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@fastex/database";
+import { getPrisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
+  const prisma = getPrisma();
   try {
     await requireUser();
 

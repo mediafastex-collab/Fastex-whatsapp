@@ -47,7 +47,7 @@ export default function WhatsAppSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       });
-      const data = await res.json();
+      const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || "Save failed");
       setSaveMessage("Settings saved successfully!");
     } catch (err: any) {
@@ -72,7 +72,7 @@ export default function WhatsAppSettingsPage() {
           customMessage: renderWhatsAppMessage(settings.defaultMessage, samplePlaceholders),
         }),
       });
-      const data = await res.json();
+      const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || "Send test failed");
       setTestStatus(`Success! Test message queued (Job ID: ${data.messageId || "ok"}).`);
     } catch (err: any) {

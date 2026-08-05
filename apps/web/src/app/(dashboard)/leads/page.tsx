@@ -17,7 +17,7 @@ export default function LeadsListPage() {
     try {
       const res = await fetch(`/api/leads?search=${encodeURIComponent(searchQuery)}`);
       if (res.ok) {
-        const data = await res.json();
+        const data: any = await res.json();
         setLeads(Array.isArray(data) ? data : []);
       }
     } catch (e) {

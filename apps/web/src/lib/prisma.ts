@@ -1,26 +1,28 @@
 import { getRequestContext } from "@cloudflare/next-on-pages";
-import { createPrismaClient, prisma as globalPrisma, PrismaClient } from "@fastex/database";
+import { PrismaClient } from "@prisma/client/edge";
+import { PrismaD1 } from "@prisma/adapter-d1";
 
 /**
- * Returns a PrismaClient for the current request.
+ * Returns a PrismaClient bound to the Cloudflare D1 database for the current
+ * request.
  *
- * On Cloudflare Pages the D1 binding lives on the per-request context, and a
- * D1-backed client must be created per request (reusing one across requests
- * triggers Cloudflare's "Cannot perform I/O on behalf of a different request"
- * error). Locally (next dev / Node) there is no request context, so we reuse
- * the shared singleton against the default SQLite database.
+ * We use `@prisma/client/edge` (not the Node client) because the Node client
+ * imports `async_hooks`, which the Cloudflare Edge bundle cannot resolve
+ * ("No such module async_hooks"). The edge client + D1 driver adapter is the
+ * supported combination on Cloudflare Pages/Workers.
+ *
+ * A fresh client is created per request: reusing a D1-bound client across
+ * requests triggers Cloudflare's "Cannot perform I/O on behalf of a different
+ * request" error.
  */
 export function getPrisma(): PrismaClient {
-  let d1: any = null;
-  try {
-    d1 = (getRequestContext() as any)?.env?.DB ?? null;
-  } catch {
-    // No Cloudflare request context (local dev or build) — fall through.
+  const { env } = getRequestContext();
+  const db = (env as any).DB;
+  if (!db) {
+    throw new Error(
+      "D1 binding 'DB' is not available. Bind the fastex-crm-db database to the Pages project (variable name DB)."
+    );
   }
-
-  if (d1) {
-    return createPrismaClient(d1);
-  }
-
-  return globalPrisma;
+  const adapter = new PrismaD1(db);
+  return new PrismaClient({ adapter });
 }

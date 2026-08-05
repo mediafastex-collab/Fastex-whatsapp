@@ -2,9 +2,8 @@ export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
-import { normalizeMobileNumber, renderWhatsAppMessage } from "@fastex/shared";
+import { normalizeMobileNumber } from "@fastex/shared";
 import { requireUser } from "@/lib/auth";
-import { callWorkerApi } from "@/lib/worker-client";
 
 export async function GET(req: NextRequest) {
   const prisma = getPrisma();

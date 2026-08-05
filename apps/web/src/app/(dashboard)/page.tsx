@@ -24,14 +24,6 @@ export default async function DashboardHomePage() {
       : { status: { in: ["SENT", "DELIVERED", "READ", "ACKNOWLEDGED"] } },
   });
 
-  const failedMessages = await prisma.whatsAppMessage.count({
-    where: !isAdmin ? { lead: { salespersonId: user?.id }, status: "FAILED" } : { status: "FAILED" },
-  });
-
-  const session = await prisma.whatsAppSession.findUnique({
-    where: { sessionName: "main-business-whatsapp" },
-  });
-
   const recentLeads = await prisma.lead.findMany({
     where: !isAdmin ? { salespersonId: user?.id } : undefined,
     include: {
@@ -59,7 +51,7 @@ export default async function DashboardHomePage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid-3" style={{ marginBottom: "32px" }}>
+      <div className="grid-2" style={{ marginBottom: "32px" }}>
         <div className="glass-card">
           <div style={{ fontSize: "12px", color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>
             Total CRM Leads
@@ -72,26 +64,11 @@ export default async function DashboardHomePage() {
 
         <div className="glass-card">
           <div style={{ fontSize: "12px", color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>
-            Successful WhatsApp Sends
+            WhatsApp Messages Sent
           </div>
           <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--accent-green)" }}>{sentMessages}</div>
           <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px" }}>
-            Out of {totalMessages} queued jobs
-          </div>
-        </div>
-
-        <div className="glass-card">
-          <div style={{ fontSize: "12px", color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>
-            WhatsApp Web Status
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
-            <span className={`status-badge status-${session?.connectionStatus || "NOT_CONNECTED"}`}>
-              <span className="status-dot"></span>
-              <span>{session?.connectionStatus || "NOT_CONNECTED"}</span>
-            </span>
-          </div>
-          <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "8px" }}>
-            Number: {session?.phoneNumber || "Not linked"}
+            Via Click-to-Chat • {totalMessages} total contacts
           </div>
         </div>
       </div>

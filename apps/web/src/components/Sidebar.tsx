@@ -21,9 +21,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/", icon: "📊", label: "CRM Dashboard" },
   { href: "/leads/new", icon: "➕", label: "New Lead Submission" },
   { href: "/leads", icon: "👥", label: "Leads & Contacts" },
-  { href: "/whatsapp/connection", icon: "🔗", label: "WhatsApp Connection", adminOnly: true },
-  { href: "/whatsapp/settings", icon: "⚙️", label: "Message Settings", adminOnly: true },
-  { href: "/whatsapp/logs", icon: "📜", label: "Message Logs", adminOnly: true },
+  { href: "/whatsapp/logs", icon: "📜", label: "Message History", adminOnly: true },
   { href: "/users", icon: "🛡️", label: "User Management", adminOnly: true },
 ];
 

@@ -14,11 +14,7 @@ export default function LeadDetailPage() {
 
   const [lead, setLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [showConfirmResend, setShowConfirmResend] = useState(false);
-  const [showCustomModal, setShowCustomModal] = useState(false);
-  const [customText, setCustomText] = useState("");
   const [copied, setCopied] = useState(false);
 
   const fetchLead = async () => {
@@ -42,35 +38,6 @@ export default function LeadDetailPage() {
   useEffect(() => {
     if (leadId) fetchLead();
   }, [leadId]);
-
-  const handleAction = async (action: string, customMsgText?: string) => {
-    setActionLoading(true);
-    setMessage("");
-    setShowConfirmResend(false);
-    setShowCustomModal(false);
-
-    try {
-      const res = await fetch(`/api/leads/${leadId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action,
-          customMessage: customMsgText,
-        }),
-      });
-
-      const data: any = await res.json();
-      if (!res.ok) throw new Error(data.error || "Action failed");
-
-      setMessage(`Success! Message queued for sending (Job ID: ${data.jobId || data.messageId || "ok"}).`);
-      if (action === "send-custom") setCustomText("");
-      await fetchLead();
-    } catch (err: any) {
-      setMessage(`Error: ${err.message}`);
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const copyNumber = () => {
     if (lead?.normalizedNumber) {
@@ -123,8 +90,6 @@ export default function LeadDetailPage() {
       </div>
     );
   }
-
-  const hasFailedMsg = lead.messages && lead.messages.some((m: any) => m.status === "FAILED");
 
   return (
     <div>
@@ -341,77 +306,6 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      {/* Confirmation Modal for Resending Failed Message */}
-      {showConfirmResend && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 style={{ fontSize: "20px", color: "var(--accent-yellow)", marginBottom: "12px" }}>
-              Confirm Resend Failed Message
-            </h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "24px" }}>
-              Are you sure you want to resend the last failed WhatsApp message to{" "}
-              <strong>{lead.customerName}</strong> ({lead.normalizedNumber})? This attempt will respect configured rate limits and consent rules.
-            </p>
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setShowConfirmResend(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => handleAction("resend-failed")}
-              >
-                Yes, Resend Message
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal for Custom Manual Message */}
-      {showCustomModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 style={{ fontSize: "20px", marginBottom: "12px" }}>Send Custom WhatsApp Message</h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "16px" }}>
-              Compose a custom text message to be sent to <strong>{lead.customerName}</strong> via the WhatsApp worker queue.
-            </p>
-
-            <div className="form-group">
-              <label className="form-label">Message Text</label>
-              <textarea
-                className="form-textarea"
-                rows={4}
-                placeholder="Hello Aarav, here is the follow-up brochure we discussed..."
-                value={customText}
-                onChange={(e) => setCustomText(e.target.value)}
-              />
-            </div>
-
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setShowCustomModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={!customText.trim() || actionLoading}
-                onClick={() => handleAction("send-custom", customText)}
-              >
-                Send via Queue
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

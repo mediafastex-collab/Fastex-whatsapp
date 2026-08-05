@@ -233,7 +233,7 @@ export default function NewLeadPage() {
                 onChange={(e) => setForm({ ...form, businessCategory: e.target.value })}
               />
               <datalist id="business-categories-list">
-                {categories.map((cat) => (
+                {categories.map((cat: string) => (
                   <option key={cat} value={cat} />
                 ))}
               </datalist>

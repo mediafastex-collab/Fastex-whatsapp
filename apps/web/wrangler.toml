@@ -7,4 +7,4 @@ pages_build_output_dir = ".vercel/output/static"
 [[d1_databases]]
 binding = "DB"
 database_name = "fastex-crm-db"
-database_id = "fastex-crm-db-id"
+database_id = "598901ee-8e9d-4f9e-a0f6-fb63a3f9bf1a"

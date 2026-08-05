@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
     const savedCategories = leads
       .map((l: any) => l.businessCategory)
-      .filter((cat): cat is string => typeof cat === "string" && cat.trim() !== "");
+      .filter((cat: any): cat is string => typeof cat === "string" && cat.trim() !== "");
 
     // Merge default and saved master categories without duplicates
     const allCategories = Array.from(new Set([...defaultCategories, ...savedCategories])).sort();

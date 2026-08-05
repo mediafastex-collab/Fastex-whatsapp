@@ -1,10 +1,17 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@fastex/database";
 import { signAuthToken } from "@/lib/auth";
-import { createHash } from "crypto";
 
-function hashPassword(password: string): string {
-  return createHash("sha256").update(password + "fastex_salt_2026").digest("hex");
+// Web Crypto SHA-256 (Edge-compatible). Produces the same hex digest as the
+// Node "crypto" createHash used by the database seed, so seeded passwords match.
+async function hashPassword(password: string): Promise<string> {
+  const data = new TextEncoder().encode(password + "fastex_salt_2026");
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export async function POST(req: NextRequest) {
@@ -18,7 +25,7 @@ export async function POST(req: NextRequest) {
       where: { email: email.toLowerCase() },
     });
 
-    if (!user || user.passwordHash !== hashPassword(password)) {
+    if (!user || user.passwordHash !== (await hashPassword(password))) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 

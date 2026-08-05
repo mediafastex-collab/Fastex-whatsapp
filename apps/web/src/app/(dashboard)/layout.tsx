@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import React from "react";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";

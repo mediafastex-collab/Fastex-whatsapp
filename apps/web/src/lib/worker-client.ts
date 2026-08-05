@@ -7,7 +7,7 @@ export async function callWorkerApi<T = any>(endpoint: string, options: { method
   const method = options.method || "GET";
   const bodyString = options.body ? JSON.stringify(options.body) : "";
 
-  const headers = signInternalRequest(options.body || {}, INTERNAL_API_KEY, INTERNAL_API_KEY);
+  const headers = await signInternalRequest(options.body || {}, INTERNAL_API_KEY, INTERNAL_API_KEY);
 
   const res = await fetch(`${WORKER_URL}/api/internal/whatsapp${endpoint}`, {
     method,

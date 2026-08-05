@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from "next/server";
 import { callWorkerApi } from "@/lib/worker-client";
 import { requireAdmin } from "@/lib/auth";

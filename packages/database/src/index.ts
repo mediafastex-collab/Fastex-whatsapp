@@ -5,10 +5,15 @@ declare global {
   var prismaGlobal: PrismaClient | undefined;
 }
 
+function resolveD1Binding(): any {
+  // Cloudflare D1 binding may be exposed on globalThis or process.env depending on runtime.
+  if (typeof globalThis !== "undefined" && (globalThis as any).DB) return (globalThis as any).DB;
+  if (typeof process !== "undefined" && (process.env as any)?.DB) return (process.env as any).DB;
+  return null;
+}
+
 function createPrismaClient(): PrismaClient {
-  const d1Binding =
-    (typeof process !== "undefined" && (process.env as any)?.DB) ||
-    (typeof globalThis !== "undefined" && (globalThis as any).DB);
+  const d1Binding = resolveD1Binding();
 
   if (d1Binding) {
     try {
@@ -16,7 +21,7 @@ function createPrismaClient(): PrismaClient {
       const adapter = new PrismaD1(d1Binding);
       return new PrismaClient({ adapter } as any);
     } catch (e) {
-      console.warn("D1 binding detected but @prisma/adapter-d1 load failed. Falling back to default SQLite.", e);
+      console.warn("D1 binding detected but @prisma/adapter-d1 load failed. Falling back to default client.", e);
     }
   }
 
@@ -25,11 +30,27 @@ function createPrismaClient(): PrismaClient {
   });
 }
 
-export const prisma = global.prismaGlobal || createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  global.prismaGlobal = prisma;
+/**
+ * Lazily instantiate PrismaClient on first property access. This is essential
+ * for the Edge/Cloudflare build: Next.js evaluates route modules during
+ * "collect page data", and constructing PrismaClient without a driver adapter
+ * throws on the Edge runtime. Deferring construction until an actual query runs
+ * keeps the build green while still binding to D1 at request time.
+ */
+function getClient(): PrismaClient {
+  if (!global.prismaGlobal) {
+    global.prismaGlobal = createPrismaClient();
+  }
+  return global.prismaGlobal;
 }
+
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getClient();
+    const value = Reflect.get(client as any, prop, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
 
 export * from "@prisma/client";
 

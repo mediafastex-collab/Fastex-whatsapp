@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@fastex/database";
 import { requireAdmin } from "@/lib/auth";

@@ -1,5 +1,5 @@
 # Logs
-logs
+/logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -28,6 +28,7 @@ jspm_packages/
 out/
 build/
 dist/
+.vercel/
 *.tsbuildinfo
 
 # Env files

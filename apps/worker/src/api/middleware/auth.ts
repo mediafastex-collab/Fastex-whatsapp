@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { verifyInternalRequest } from "@fastex/shared";
 import { config } from "../../config/env";
 
-export function authenticateInternalApi(req: Request, res: Response, next: NextFunction): void {
+export async function authenticateInternalApi(req: Request, res: Response, next: NextFunction): Promise<void> {
   const apiKey = req.headers["x-internal-api-key"] as string;
   const signature = req.headers["x-signature"] as string;
   const timestamp = req.headers["x-timestamp"] as string;
@@ -21,7 +21,7 @@ export function authenticateInternalApi(req: Request, res: Response, next: NextF
 
   // 3. Verify HMAC-SHA256 signature
   const bodyString = JSON.stringify(req.body || {});
-  const isValid = verifyInternalRequest(signature, timestamp, bodyString, config.internalApiKey);
+  const isValid = await verifyInternalRequest(signature, timestamp, bodyString, config.internalApiKey);
 
   if (!isValid) {
     res.status(403).json({ error: "Forbidden: Invalid HMAC signature or expired request timestamp" });

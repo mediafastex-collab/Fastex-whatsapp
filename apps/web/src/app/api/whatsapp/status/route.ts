@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from "next/server";
 import { callWorkerApi } from "@/lib/worker-client";
 import { getCurrentUser } from "@/lib/auth";

@@ -37,6 +37,12 @@ export default function UsersPage() {
     setPageError("");
     try {
       const res = await fetch("/api/users", { cache: "no-store" });
+      // Stale/expired session — send the user back to login instead of showing
+      // a confusing "Unauthorized" screen.
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
       const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load users");
       setUsers(data);
@@ -61,6 +67,10 @@ export default function UsersPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }),
       });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
       const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create user");
       setFormMsg({ type: "success", text: `User "${data.user.name}" created.` });

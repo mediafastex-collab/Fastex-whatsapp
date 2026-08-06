@@ -17,6 +17,18 @@ export default function LeadDetailPage() {
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const [showEdit, setShowEdit] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editForm, setEditForm] = useState({
+    customerName: "",
+    originalNumber: "",
+    businessName: "",
+    businessCategory: "",
+    followUpDate: "",
+    note: "",
+  });
+
   const fetchLead = async () => {
     setLoading(true);
     try {
@@ -44,6 +56,52 @@ export default function LeadDetailPage() {
       navigator.clipboard.writeText(lead.normalizedNumber);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const openEdit = () => {
+    setEditError("");
+    setEditForm({
+      customerName: lead.customerName || "",
+      originalNumber: lead.originalNumber || lead.normalizedNumber || "",
+      businessName: lead.businessName || "",
+      businessCategory: lead.businessCategory || "",
+      followUpDate: lead.followUpDate ? new Date(lead.followUpDate).toISOString().slice(0, 10) : "",
+      note: lead.note || "",
+    });
+    setShowEdit(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editForm.customerName.trim() || !editForm.originalNumber.trim()) {
+      setEditError("Customer name and mobile number are required.");
+      return;
+    }
+    setSavingEdit(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: editForm.customerName.trim(),
+          originalNumber: editForm.originalNumber.trim(),
+          businessName: editForm.businessName.trim() || null,
+          businessCategory: editForm.businessCategory.trim() || null,
+          followUpDate: editForm.followUpDate || null,
+          note: editForm.note.trim() || null,
+        }),
+      });
+      const data: any = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update lead");
+      setShowEdit(false);
+      setMessage("✅ Lead details updated.");
+      await fetchLead();
+    } catch (err: any) {
+      setEditError(err.message);
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -110,6 +168,12 @@ export default function LeadDetailPage() {
           <button type="button" className="btn btn-secondary" onClick={copyNumber}>
             <span>📋</span>
             <span>{copied ? "Number Copied!" : "Copy Number"}</span>
+          </button>
+
+          {/* 1b. Edit Lead */}
+          <button type="button" className="btn btn-secondary" onClick={openEdit} style={{ borderColor: "var(--accent-violet)", color: "#c4b5fd" }}>
+            <span>✏️</span>
+            <span>Edit Lead</span>
           </button>
 
           {/* 2. Monsoon Edit 2026 Click-to-Chat & Mark Sent */}
@@ -306,6 +370,62 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
+      {/* Edit Lead modal */}
+      {showEdit && (
+        <div className="modal-overlay" onClick={() => setShowEdit(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ marginBottom: "4px" }}>Edit Lead</h2>
+            <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "20px" }}>
+              Update the customer's name, number, or any other details.
+            </p>
+
+            {editError && (
+              <div style={{ padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", fontSize: "13px", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.4)", color: "#f87171" }}>
+                {editError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEdit}>
+              <div className="form-group">
+                <label className="form-label">Customer Name</label>
+                <input className="form-input" value={editForm.customerName} onChange={(e) => setEditForm({ ...editForm, customerName: e.target.value })} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Mobile Number</label>
+                <input className="form-input" value={editForm.originalNumber} onChange={(e) => setEditForm({ ...editForm, originalNumber: e.target.value })} required placeholder="e.g. 98765 43210" />
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Indian numbers auto-format to +91. The WhatsApp ID updates automatically.</span>
+              </div>
+
+              <div className="grid-2">
+                <div className="form-group">
+                  <label className="form-label">Business Name</label>
+                  <input className="form-input" value={editForm.businessName} onChange={(e) => setEditForm({ ...editForm, businessName: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Business Category</label>
+                  <input className="form-input" value={editForm.businessCategory} onChange={(e) => setEditForm({ ...editForm, businessCategory: e.target.value })} />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Follow-up Date</label>
+                <input className="form-input" type="date" value={editForm.followUpDate} onChange={(e) => setEditForm({ ...editForm, followUpDate: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Meeting Notes</label>
+                <textarea className="form-textarea" rows={3} value={editForm.note} onChange={(e) => setEditForm({ ...editForm, note: e.target.value })} />
+              </div>
+
+              <div className="action-row" style={{ justifyContent: "flex-end", marginTop: "8px" }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEdit(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={savingEdit}>{savingEdit ? "Saving…" : "Save Changes"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

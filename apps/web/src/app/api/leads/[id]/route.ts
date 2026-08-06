@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import { normalizeMobileNumber } from "@fastex/shared";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const prisma = getPrisma();
@@ -53,15 +54,32 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: "Forbidden: You cannot modify leads belonging to another salesperson" }, { status: 403 });
     }
 
+    const data: any = {
+      customerName: body.customerName !== undefined ? body.customerName : lead.customerName,
+      businessName: body.businessName !== undefined ? body.businessName : lead.businessName,
+      businessCategory: body.businessCategory !== undefined ? body.businessCategory : lead.businessCategory,
+      leadStatus: body.leadStatus !== undefined ? body.leadStatus : lead.leadStatus,
+      note: body.note !== undefined ? body.note : lead.note,
+    };
+
+    // Editing the mobile number re-normalizes the WhatsApp recipient fields.
+    if (body.originalNumber !== undefined && body.originalNumber.trim() !== lead.originalNumber) {
+      const raw = body.originalNumber.trim();
+      const normalized = normalizeMobileNumber(raw, lead.countryCode || "+91");
+      data.originalNumber = raw;
+      data.countryCode = normalized.countryCode;
+      data.normalizedNumber = normalized.normalizedNumber || raw;
+      data.recipientId = normalized.recipientId || `${raw}@c.us`;
+      data.isValidNumber = normalized.isValid;
+    }
+
+    if (body.followUpDate !== undefined) {
+      data.followUpDate = body.followUpDate ? new Date(body.followUpDate) : null;
+    }
+
     const updated = await prisma.lead.update({
       where: { id: leadId },
-      data: {
-        customerName: body.customerName !== undefined ? body.customerName : lead.customerName,
-        businessName: body.businessName !== undefined ? body.businessName : lead.businessName,
-        businessCategory: body.businessCategory !== undefined ? body.businessCategory : lead.businessCategory,
-        leadStatus: body.leadStatus !== undefined ? body.leadStatus : lead.leadStatus,
-        note: body.note !== undefined ? body.note : lead.note,
-      },
+      data,
     });
 
     if (body.markContacted) {
